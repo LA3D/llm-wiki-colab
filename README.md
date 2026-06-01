@@ -139,3 +139,7 @@ case:
   relaxed) for the federated wiki use case.
 - Namespace and IRI base for the collaborative variant
   (`llm-wiki-colab:` at `https://la3d.github.io/llm-wiki-colab/`).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
