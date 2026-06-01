@@ -1,0 +1,13 @@
+# Find the most-connected notes (highest inbound edge count). Navigation hubs and key concepts.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?title (COUNT(?src) AS ?inbound) WHERE {
+    ?src ?pred ?note .
+    ?note dcterms:title ?title .
+    FILTER(?pred NOT IN (
+        rdf:type, dcterms:title, dcterms:created,
+        llm-wiki-colab:tag, llm-wiki-colab:status, llm-wiki-colab:timeline
+    ))
+    FILTER(isIRI(?note))
+} GROUP BY ?title ORDER BY DESC(?inbound) LIMIT 25

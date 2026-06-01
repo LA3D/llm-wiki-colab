@@ -1,0 +1,8 @@
+# Find intellectual lineage: theory notes that extend other theories.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?noteTitle ?extends ?extendsTitle WHERE {
+    ?note llm-wiki-colab:extends ?extends .
+    ?note dcterms:title ?noteTitle .
+    ?extends dcterms:title ?extendsTitle .
+} ORDER BY ?noteTitle

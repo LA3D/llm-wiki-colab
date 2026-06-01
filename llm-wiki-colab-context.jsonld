@@ -1,0 +1,37 @@
+{
+  "@context": {
+    "@base": "https://la3d.github.io/llm-wiki-colab/page/",
+    "llm-wiki-colab": "https://la3d.github.io/llm-wiki-colab/ontology#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+
+    "type":           "@type",
+    "up":             {"@id": "llm-wiki-colab:up",             "@type": "@id"},
+    "area":           {"@id": "llm-wiki-colab:area",           "@type": "@id"},
+    "concept":        {"@id": "llm-wiki-colab:concept",        "@type": "@id"},
+    "source":         {"@id": "llm-wiki-colab:source",         "@type": "@id"},
+    "extends":        {"@id": "llm-wiki-colab:extends",        "@type": "@id"},
+    "supports":       {"@id": "llm-wiki-colab:supports",       "@type": "@id"},
+    "criticizes":     {"@id": "llm-wiki-colab:criticizes",     "@type": "@id"},
+    "implementation": {"@id": "llm-wiki-colab:implementation", "@type": "@id"},
+    "related":        {"@id": "llm-wiki-colab:related",        "@type": "@id"},
+    "author":         {"@id": "llm-wiki-colab:author",         "@type": "@id"},
+    "affiliation":    {"@id": "llm-wiki-colab:affiliation",    "@type": "@id"},
+    "collaborator":   {"@id": "llm-wiki-colab:collaborator",   "@type": "@id"},
+    "partOf":           {"@id": "llm-wiki-colab:partOf",           "@type": "@id"},
+    "dependsOn":        {"@id": "llm-wiki-colab:dependsOn",        "@type": "@id"},
+    "defines":          {"@id": "llm-wiki-colab:defines",          "@type": "@id"},
+    "resolvedBy":       {"@id": "llm-wiki-colab:resolvedBy",       "@type": "@id"},
+    "incorporatedInto": {"@id": "llm-wiki-colab:incorporatedInto", "@type": "@id"},
+    "outOfScopeFor":    {"@id": "llm-wiki-colab:outOfScopeFor",    "@type": "@id"},
+    "precedes":         {"@id": "llm-wiki-colab:precedes",         "@type": "@id"},
+    "feedsInto":        {"@id": "llm-wiki-colab:feedsInto",        "@type": "@id"},
+    "mentions":       {"@id": "llm-wiki-colab:mentions",       "@type": "@id"},
+    "tags":           {"@id": "llm-wiki-colab:tag"},
+    "title":          {"@id": "dcterms:title"},
+    "created":        {"@id": "dcterms:created", "@type": "xsd:date"},
+    "status":         {"@id": "llm-wiki-colab:status"},
+    "timeline":       {"@id": "llm-wiki-colab:timeline"}
+  }
+}

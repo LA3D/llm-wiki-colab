@@ -1,0 +1,12 @@
+# Multi-hop: find literature -> concept -> implementation chains. Discovers how papers connect to code via concepts.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?paper ?paperTitle ?concept ?conceptTitle ?impl ?implTitle WHERE {
+    ?paper llm-wiki-colab:concept ?concept .
+    ?paper dcterms:title ?paperTitle .
+    ?concept dcterms:title ?conceptTitle .
+    OPTIONAL {
+        ?concept llm-wiki-colab:implementation ?impl .
+        ?impl dcterms:title ?implTitle .
+    }
+} ORDER BY ?conceptTitle

@@ -1,0 +1,302 @@
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix llm-wiki-colab:   <https://la3d.github.io/llm-wiki-colab/ontology#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix vs:      <https://la3d.github.io/llm-wiki-colab/shapes/> .
+
+# =============================================================================
+# Vault Shapes — SHACL validation constraints + SPARQL materialization rules
+#
+# Three concerns in one file:
+#   1. NodeShapes with sh:property  — structural validation
+#   2. sh:SPARQLConstraint           — complex validation (cross-node)
+#   3. sh:SPARQLRule with sh:construct — materialization of implied triples
+#
+# Usage:
+#   Validate:     shacl validate --shapes=llm-wiki-shapes.ttl --data=llm-wiki-graph.ttl
+#   Materialize:  shacl infer --shapes=llm-wiki-shapes.ttl --data=llm-wiki-graph.ttl
+# =============================================================================
+
+# --- Prefix declarations for embedded SPARQL ---
+
+vs:Prefixes a sh:PrefixDeclaration ;
+    sh:declare
+        [ sh:prefix "llm-wiki" ; sh:namespace "https://la3d.github.io/llm-wiki-colab/ontology#"^^xsd:anyURI ] ,
+        [ sh:prefix "dcterms" ; sh:namespace "http://purl.org/dc/terms/"^^xsd:anyURI ] ,
+        [ sh:prefix "rdf"     ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] ,
+        [ sh:prefix "rdfs"    ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] ,
+        [ sh:prefix "xsd"     ; sh:namespace "http://www.w3.org/2001/XMLSchema#"^^xsd:anyURI ] .
+
+# =============================================================================
+# Layer 1: Structural Validation — sh:property constraints
+# =============================================================================
+
+# --- Every note must have a title ---
+
+vs:NoteShape a sh:NodeShape ;
+    sh:targetSubjectsOf rdf:type ;
+    rdfs:comment "Base shape: every typed note must have a title." ;
+    sh:property [
+        sh:path dcterms:title ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "Every note must have exactly one dcterms:title." ;
+    ] .
+
+# --- Projects must have an area of focus ---
+
+vs:ProjectShape a sh:NodeShape ;
+    sh:targetClass llm-wiki-colab:Project ;
+    rdfs:comment "Projects must connect to an area of focus (Pullein methodology)." ;
+    sh:property [
+        sh:path llm-wiki-colab:area ;
+        sh:minCount 1 ;
+        sh:message "Project is missing llm-wiki-colab:area — every project must serve an area of focus." ;
+        sh:severity sh:Warning ;
+    ] ;
+    sh:property [
+        sh:path llm-wiki-colab:status ;
+        sh:minCount 1 ;
+        sh:message "Project is missing llm-wiki-colab:status." ;
+        sh:severity sh:Info ;
+    ] .
+
+# --- MOCs must have up: to a parent ---
+
+vs:MOCShape a sh:NodeShape ;
+    sh:targetClass llm-wiki-colab:MOC ;
+    rdfs:comment "MOCs must have an up: link to their parent (another MOC or VAULT-INDEX)." ;
+    sh:property [
+        sh:path llm-wiki-colab:up ;
+        sh:minCount 1 ;
+        sh:message "MOC is missing llm-wiki-colab:up — needs a parent in the hierarchy." ;
+        sh:severity sh:Warning ;
+    ] .
+
+# --- Literature notes must have up: ---
+
+vs:LiteratureNoteShape a sh:NodeShape ;
+    sh:targetClass llm-wiki-colab:LiteratureNote ;
+    rdfs:comment "Literature notes must link up to a MOC or index." ;
+    sh:property [
+        sh:path llm-wiki-colab:up ;
+        sh:minCount 1 ;
+        sh:message "Literature note is missing llm-wiki-colab:up — needs a parent MOC or index." ;
+        sh:severity sh:Warning ;
+    ] .
+
+# --- Theory notes should have source: or extends: ---
+
+vs:TheoryNoteShape a sh:NodeShape ;
+    sh:targetClass llm-wiki-colab:TheoryNote ;
+    rdfs:comment "Theory notes should cite sources or extend other theories." ;
+    sh:property [
+        sh:path llm-wiki-colab:up ;
+        sh:minCount 1 ;
+        sh:message "Theory note is missing llm-wiki-colab:up — needs a parent MOC." ;
+        sh:severity sh:Warning ;
+    ] .
+
+# --- Author notes must have up: ---
+
+vs:AuthorNoteShape a sh:NodeShape ;
+    sh:targetClass llm-wiki-colab:AuthorNote ;
+    rdfs:comment "Author notes must link up to a MOC or index (typically LITERATURE-INDEX)." ;
+    sh:property [
+        sh:path llm-wiki-colab:up ;
+        sh:minCount 1 ;
+        sh:message "Author note is missing llm-wiki-colab:up — should point to LITERATURE-INDEX or relevant MOC." ;
+        sh:severity sh:Warning ;
+    ] .
+
+# --- Person notes should have affiliation: ---
+
+vs:PersonShape a sh:NodeShape ;
+    sh:targetClass llm-wiki-colab:Person ;
+    rdfs:comment "Person notes should have an affiliation." ;
+    sh:property [
+        sh:path llm-wiki-colab:affiliation ;
+        sh:minCount 1 ;
+        sh:message "Person is missing llm-wiki-colab:affiliation — consider adding their organization." ;
+        sh:severity sh:Info ;
+    ] .
+
+# --- Areas must have up: to VAULT-INDEX ---
+
+vs:AreaShape a sh:NodeShape ;
+    sh:targetClass llm-wiki-colab:Area ;
+    rdfs:comment "Areas of focus must link up to VAULT-INDEX." ;
+    sh:property [
+        sh:path llm-wiki-colab:up ;
+        sh:minCount 1 ;
+        sh:message "Area is missing llm-wiki-colab:up — should point to VAULT-INDEX." ;
+        sh:severity sh:Warning ;
+    ] .
+
+# =============================================================================
+# Layer 2: Complex Validation — sh:SPARQLConstraint
+# =============================================================================
+
+# --- Detect notes that point to nonexistent targets ---
+
+vs:DanglingReferenceConstraint a sh:NodeShape ;
+    sh:targetSubjectsOf rdf:type ;
+    rdfs:comment "Detect edge fields pointing to URIs that have no type (not in the graph as typed notes)." ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes vs:Prefixes ;
+        sh:message "Edge field points to {?target} which has no type in the graph (possible dangling reference)." ;
+        sh:severity sh:Info ;
+        sh:select """
+            SELECT $this ?target WHERE {
+                $this ?pred ?target .
+                FILTER(?pred IN (llm-wiki-colab:up, llm-wiki-colab:area, llm-wiki-colab:concept, llm-wiki-colab:source,
+                                 llm-wiki-colab:extends, llm-wiki-colab:supports, llm-wiki-colab:criticizes,
+                                 llm-wiki-colab:implementation, llm-wiki-colab:related,
+                                 llm-wiki-colab:author, llm-wiki-colab:affiliation, llm-wiki-colab:collaborator))
+                FILTER(isIRI(?target))
+                FILTER NOT EXISTS { ?target a ?anyType . }
+            }
+        """ ;
+    ] .
+
+# =============================================================================
+# Layer 3: Materialization Rules — sh:SPARQLRule
+# =============================================================================
+
+# --- Transitive llm-wiki-colab:up closure ---
+# If A llm-wiki-colab:up B and B llm-wiki-colab:up C, then A llm-wiki-colab:up C (for hierarchy traversal)
+
+vs:TransitiveUpRule a sh:NodeShape ;
+    sh:targetSubjectsOf llm-wiki-colab:up ;
+    rdfs:comment "Materialize transitive closure of llm-wiki-colab:up for hierarchy queries." ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:prefixes vs:Prefixes ;
+        sh:construct """
+            CONSTRUCT { $this llm-wiki-colab:up ?ancestor . }
+            WHERE {
+                $this llm-wiki-colab:up+ ?ancestor .
+                FILTER(?ancestor != $this)
+            }
+        """ ;
+    ] .
+
+# --- Area inheritance: propagate area down the up: hierarchy ---
+# If A llm-wiki-colab:up B and B llm-wiki-colab:area C, then A llm-wiki-colab:area C
+
+vs:AreaInheritanceRule a sh:NodeShape ;
+    sh:targetSubjectsOf llm-wiki-colab:up ;
+    rdfs:comment "Inherit area from parent: if a note's parent has llm-wiki-colab:area, the note inherits it." ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:prefixes vs:Prefixes ;
+        sh:construct """
+            CONSTRUCT { $this llm-wiki-colab:area ?area . }
+            WHERE {
+                $this llm-wiki-colab:up+ ?ancestor .
+                ?ancestor llm-wiki-colab:area ?area .
+                FILTER NOT EXISTS { $this llm-wiki-colab:area ?area . }
+            }
+        """ ;
+    ] .
+
+# --- Inverse supports/criticizes edges ---
+# If A llm-wiki-colab:supports B, materialize B llm-wiki-colab:supportedBy A
+
+vs:InverseSupportRule a sh:NodeShape ;
+    sh:targetObjectsOf llm-wiki-colab:supports ;
+    rdfs:comment "Materialize inverse: if A supports B, then B supportedBy A." ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:prefixes vs:Prefixes ;
+        sh:construct """
+            CONSTRUCT { $this llm-wiki-colab:supportedBy ?source . }
+            WHERE { ?source llm-wiki-colab:supports $this . }
+        """ ;
+    ] .
+
+vs:InverseCriticizeRule a sh:NodeShape ;
+    sh:targetObjectsOf llm-wiki-colab:criticizes ;
+    rdfs:comment "Materialize inverse: if A criticizes B, then B criticizedBy A." ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:prefixes vs:Prefixes ;
+        sh:construct """
+            CONSTRUCT { $this llm-wiki-colab:criticizedBy ?source . }
+            WHERE { ?source llm-wiki-colab:criticizes $this . }
+        """ ;
+    ] .
+
+# --- Inverse concept edges ---
+# If A llm-wiki-colab:concept B, materialize B llm-wiki-colab:conceptOf A
+
+vs:InverseConceptRule a sh:NodeShape ;
+    sh:targetObjectsOf llm-wiki-colab:concept ;
+    rdfs:comment "Materialize inverse: if A references concept B, then B conceptOf A." ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:prefixes vs:Prefixes ;
+        sh:construct """
+            CONSTRUCT { $this llm-wiki-colab:conceptOf ?source . }
+            WHERE { ?source llm-wiki-colab:concept $this . }
+        """ ;
+    ] .
+
+# --- Inverse author edges ---
+# If A llm-wiki-colab:author B, materialize B llm-wiki-colab:authorOf A
+
+vs:InverseAuthorRule a sh:NodeShape ;
+    sh:targetObjectsOf llm-wiki-colab:author ;
+    rdfs:comment "Materialize inverse: if A has author B, then B authorOf A." ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:prefixes vs:Prefixes ;
+        sh:construct """
+            CONSTRUCT { $this llm-wiki-colab:authorOf ?work . }
+            WHERE { ?work llm-wiki-colab:author $this . }
+        """ ;
+    ] .
+
+# --- Subclass materialization: AuthorNote inherits Person type ---
+# Every llm-wiki-colab:AuthorNote is also a llm-wiki-colab:Person
+
+vs:AuthorIsPersonRule a sh:NodeShape ;
+    sh:targetClass llm-wiki-colab:AuthorNote ;
+    rdfs:comment "Materialize: every AuthorNote is also a Person (for queries targeting llm-wiki-colab:Person)." ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:prefixes vs:Prefixes ;
+        sh:construct """
+            CONSTRUCT { $this a llm-wiki-colab:Person . }
+            WHERE { $this a llm-wiki-colab:AuthorNote . }
+        """ ;
+    ] .
+
+# --- Hub detection: materialize a llm-wiki-colab:hubScore for highly connected nodes ---
+
+vs:HubDetectionRule a sh:NodeShape ;
+    sh:targetSubjectsOf rdf:type ;
+    rdfs:comment "Tag notes with high inbound edge count as hubs (for navigation prioritization)." ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:prefixes vs:Prefixes ;
+        sh:construct """
+            CONSTRUCT { $this llm-wiki-colab:isHub true . }
+            WHERE {
+                {
+                    SELECT $this (COUNT(?src) AS ?inbound) WHERE {
+                        ?src ?pred $this .
+                        FILTER(?pred IN (llm-wiki-colab:up, llm-wiki-colab:area, llm-wiki-colab:concept, llm-wiki-colab:source,
+                                         llm-wiki-colab:extends, llm-wiki-colab:supports, llm-wiki-colab:criticizes,
+                                         llm-wiki-colab:implementation, llm-wiki-colab:related,
+                                         llm-wiki-colab:author, llm-wiki-colab:affiliation, llm-wiki-colab:collaborator))
+                    } GROUP BY $this
+                }
+                FILTER(?inbound >= 10)
+            }
+        """ ;
+    ] .

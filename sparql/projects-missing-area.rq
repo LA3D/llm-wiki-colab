@@ -1,0 +1,8 @@
+# Find projects without an area of focus (Pullein compliance check).
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?title WHERE {
+    ?note a llm-wiki-colab:Project .
+    ?note dcterms:title ?title .
+    FILTER NOT EXISTS { ?note llm-wiki-colab:area ?area . }
+} ORDER BY ?title

@@ -1,0 +1,13 @@
+# Find notes whose title contains a substring. Replace SEARCH_TERM. Returns the note, its type, and all edges.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?title ?type ?pred ?targetTitle WHERE {
+    ?note dcterms:title ?title .
+    FILTER(CONTAINS(LCASE(?title), LCASE("SEARCH_TERM")))
+    ?note a ?type .
+    OPTIONAL {
+        ?note ?pred ?target .
+        ?target dcterms:title ?targetTitle .
+        FILTER(?pred NOT IN (dcterms:title))
+    }
+} ORDER BY ?title ?pred

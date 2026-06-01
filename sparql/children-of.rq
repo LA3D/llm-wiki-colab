@@ -1,0 +1,8 @@
+# List all notes whose llm-wiki-colab:up points to a given parent. Replace PARENT_SLUG with the URI slug (e.g. 'Agentic-Memory-Systems-MOC').
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?type ?title WHERE {
+    ?note llm-wiki-colab:up <https://la3d.github.io/llm-wiki-colab/page/PARENT_SLUG> .
+    ?note a ?type .
+    ?note dcterms:title ?title .
+} ORDER BY ?type ?title

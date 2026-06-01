@@ -1,0 +1,471 @@
+@prefix llm-wiki-colab:   <https://la3d.github.io/llm-wiki-colab/ontology#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+# =============================================================================
+# Vault Ontology — Minimal SKOS + RDFS vocabulary
+#
+# Pay-as-you-go: every type and property gets a definition and notation.
+# No class hierarchy, no reasoning requirements. Evolve as needed.
+#
+# This file is the vocabulary source of truth. The skill reads it to
+# understand what queries are possible. SHACL shapes validate against it.
+# The @context maps frontmatter syntax to these terms.
+# =============================================================================
+
+# =============================================================================
+# Note Type Classes
+#
+# Each type is both rdfs:Class (for rdf:type / sh:targetClass) and
+# skos:Concept (for definitions, labels, notation). OWL 2 punning
+# makes this formally sound.
+#
+# skos:notation = the frontmatter string value (what users write in YAML)
+# skos:definition = what this type means
+# skos:scopeNote = usage guidance
+# =============================================================================
+
+# --- Knowledge Notes ---
+
+llm-wiki-colab:TheoryNote a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Theory Note"@en ;
+    skos:notation "theory-note" ;
+    skos:definition "Theoretical framework or model — claims about how things work."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/[topic]/"@en .
+
+llm-wiki-colab:ConceptNote a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Concept Note"@en ;
+    skos:notation "concept-note" ;
+    skos:definition "Specific concept or idea — a named thing in a domain."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/[topic]/"@en .
+
+llm-wiki-colab:MethodNote a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Method Note"@en ;
+    skos:notation "method-note" ;
+    skos:definition "Methodology, technique, or approach — how to do something."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/[topic]/Methods/"@en .
+
+llm-wiki-colab:Finding a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Finding"@en ;
+    skos:notation "finding" ;
+    skos:definition "Experimental result or empirical observation."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/[topic]/"@en .
+
+llm-wiki-colab:ImplementationNote a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Implementation Note"@en ;
+    skos:notation "implementation-note" ;
+    skos:definition "Code repository, experiment, or system build."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/[topic]/Implementation/"@en .
+
+# --- Literature ---
+
+llm-wiki-colab:LiteratureNote a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Literature Note"@en ;
+    skos:notation "literature-note" ;
+    skos:definition "Note about a research paper. Use literatureType: for finer classification."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/Literature/"@en .
+
+llm-wiki-colab:BookNote a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Book Note"@en ;
+    skos:notation "book-note" ;
+    skos:definition "Note about a book, typically from Readwise highlights or manual reading."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/Literature/"@en .
+
+# --- Entities (People and Organizations) ---
+
+llm-wiki-colab:Person a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Person"@en ;
+    skos:notation "person" ;
+    skos:definition "A person tracked in the vault — collaborator, contact, or other non-author individual."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/Literature/ or 03 - Resources/People/. Use for collaborators, contacts, and people known through work rather than authorship."@en .
+
+llm-wiki-colab:AuthorNote a rdfs:Class, skos:Concept ;
+    rdfs:subClassOf llm-wiki-colab:Person ;
+    skos:prefLabel "Author Note"@en ;
+    skos:notation "author-note" ;
+    skos:definition "Author profile linking their works across the vault. A person known primarily through their writing, research, or thought leadership."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/Literature/. Authors are a subclass of Person — they inherit all Person properties and can also be collaborators."@en .
+
+llm-wiki-colab:Organization a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Organization"@en ;
+    skos:notation "organization" ;
+    skos:definition "Institution, lab, company, or group. Used for affiliations and institutional context."@en ;
+    skos:scopeNote "Create only for organizations that recur across multiple notes or projects. Examples: Anthropic, CERN, W3C."@en .
+
+# --- External ---
+
+llm-wiki-colab:ExternalResource a rdfs:Class, skos:Concept ;
+    skos:prefLabel "External Resource"@en ;
+    skos:notation "external-resource" ;
+    skos:definition "Blog post, article, tool review, or other external content."@en ;
+    skos:scopeNote "Typical folder: External Resources/"@en .
+
+llm-wiki-colab:Tool a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Tool"@en ;
+    skos:notation "tool" ;
+    skos:definition "Software tool or system description."@en ;
+    skos:scopeNote "Typical folder: External Resources/"@en .
+
+# --- Navigation ---
+
+llm-wiki-colab:MOC a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Map of Content"@en ;
+    skos:notation "moc" ;
+    skos:definition "Topic hub linking related notes in a domain."@en ;
+    skos:scopeNote "Placed in the relevant topic folder. Listed in VAULT-INDEX.md."@en .
+
+llm-wiki-colab:Index a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Index"@en ;
+    skos:notation "index" ;
+    skos:definition "Sub-index or catalog of notes in an area."@en ;
+    skos:scopeNote "Examples: LITERATURE-INDEX.md, EXTERNAL-INDEX.md."@en .
+
+# --- Area ---
+
+llm-wiki-colab:Area a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Area of Focus"@en ;
+    skos:notation "area" ;
+    skos:definition "Ongoing responsibility with a standard to maintain. Foundation of the Pullein/GAPRA methodology."@en ;
+    skos:scopeNote "Typical folder: 02 - Areas of Focus/. Eight areas defined."@en .
+
+# --- Project ---
+
+llm-wiki-colab:Project a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Project"@en ;
+    skos:notation "project" ;
+    skos:definition "Time-bound effort serving an area of focus."@en ;
+    skos:scopeNote "Typical folder: 01 - Projects/"@en .
+
+llm-wiki-colab:Plan a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Plan"@en ;
+    skos:notation "plan" ;
+    skos:definition "PLAN.md with phases, timeline, and success criteria for a project."@en ;
+    skos:scopeNote "Typical folder: 01 - Projects/[subfolder]/"@en .
+
+llm-wiki-colab:Decision a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Decision"@en ;
+    skos:notation "decision" ;
+    skos:definition "Decision log recording architectural or design choices for a project."@en ;
+    skos:scopeNote "Typical folder: 01 - Projects/[subfolder]/"@en .
+
+# --- Reference ---
+
+llm-wiki-colab:Reference a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Reference"@en ;
+    skos:notation "reference" ;
+    skos:definition "General reference material."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/Obsidian Reference/"@en .
+
+llm-wiki-colab:Workflow a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Workflow"@en ;
+    skos:notation "workflow" ;
+    skos:definition "Documented process or workflow."@en ;
+    skos:scopeNote "Typical folder: 03 - Resources/"@en .
+
+llm-wiki-colab:CourseNotes a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Course Notes"@en ;
+    skos:notation "course-notes" ;
+    skos:definition "Notes from a course or tutorial."@en ;
+    skos:scopeNote "Typical folder: Courses/"@en .
+
+# --- Other ---
+
+llm-wiki-colab:RecipeCollection a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Recipe Collection"@en ;
+    skos:notation "recipe-collection" ;
+    skos:definition "Recipes and cooking notes."@en ;
+    skos:scopeNote "Typical folder: Cooking & Recipes/"@en .
+
+llm-wiki-colab:FleetingNote a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Fleeting Note"@en ;
+    skos:notation "fleeting-note" ;
+    skos:definition "Quick capture, unsorted thoughts."@en ;
+    skos:scopeNote "Typical folder: Inbox/"@en .
+
+# =============================================================================
+# llm-wiki Pattern Type Additions
+#
+# Classes used by the llm-wiki-memory-template pattern that are not covered
+# by the vault's core ontology. Each declares a skos:notation matching the
+# frontmatter string the llm-wiki SCHEMA uses, so wiki-to-jsonld.py's
+# TYPE_MAP picks them up automatically. Where a reasonable parent exists in
+# the core vault ontology, the new class declares rdfs:subClassOf so that
+# SPARQL queries written against the core classes still find the wiki
+# variants via simple RDFS inference.
+#
+# Source: extension from the llm-wiki-memory-template wiki schema. Candidate
+# for upstream contribution to agentic-vault if generally useful.
+# =============================================================================
+
+llm-wiki-colab:Concept a rdfs:Class, skos:Concept ;
+    rdfs:subClassOf llm-wiki-colab:ConceptNote ;
+    skos:prefLabel "Concept (llm-wiki)"@en ;
+    skos:notation "concept" ;
+    skos:definition "A page describing a single concept, idea, or object. The llm-wiki SCHEMA's general-purpose concept type."@en ;
+    skos:scopeNote "Subclass of ConceptNote so SPARQL queries against llm-wiki-colab:ConceptNote still match."@en .
+
+llm-wiki-colab:Entity a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Entity (llm-wiki)"@en ;
+    skos:notation "entity" ;
+    skos:definition "A page about a named entity (person, organisation, system, dataset) where the specific subtype is unspecified or mixed."@en ;
+    skos:scopeNote "No subClassOf declared because the core vault ontology has sibling classes (Person, Organization, AuthorNote) rather than a single Entity superclass."@en .
+
+llm-wiki-colab:SourceSummary a rdfs:Class, skos:Concept ;
+    rdfs:subClassOf llm-wiki-colab:LiteratureNote ;
+    skos:prefLabel "Source Summary (llm-wiki)"@en ;
+    skos:notation "source-summary" ;
+    skos:definition "A summary of an external source (paper, book, web page, talk) maintained as a wiki page."@en ;
+    skos:scopeNote "Subclass of LiteratureNote so SPARQL queries against llm-wiki-colab:LiteratureNote still match."@en .
+
+llm-wiki-colab:Synthesis a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Synthesis (llm-wiki)"@en ;
+    skos:notation "synthesis" ;
+    skos:definition "A page combining findings, claims, or framings from multiple other pages into a new statement. Distinct from Finding (a single empirical observation) and from Comparison (a structured contrast)."@en ;
+    skos:scopeNote "No direct parent in the core vault ontology; new top-level class for the llm-wiki pattern."@en .
+
+llm-wiki-colab:Comparison a rdfs:Class, skos:Concept ;
+    skos:prefLabel "Comparison (llm-wiki)"@en ;
+    skos:notation "comparison" ;
+    skos:definition "A page systematically comparing two or more other pages or concepts on shared dimensions."@en ;
+    skos:scopeNote "No direct parent in the core vault ontology; new top-level class for the llm-wiki pattern."@en .
+
+# =============================================================================
+# Edge Field Properties
+#
+# Relationship types used in Breadcrumbs frontmatter.
+# Domain/range use owl:unionOf where multiple types are valid.
+# "any" domain/range = no constraint declared (omitted).
+# =============================================================================
+
+# --- Hierarchy ---
+
+llm-wiki-colab:up a rdf:Property ;
+    rdfs:label "up"@en ;
+    skos:definition "Parent in the vault hierarchy. Points to the MOC, index, or area this note belongs under."@en ;
+    rdfs:range [ owl:unionOf ( llm-wiki-colab:MOC llm-wiki-colab:Index llm-wiki-colab:Area ) ] ;
+    skos:editorialNote "Transitive closure materialized by build-graph.sh via CONSTRUCT query."@en .
+
+llm-wiki-colab:area a rdf:Property ;
+    rdfs:label "area"@en ;
+    skos:definition "Area of focus this note serves. Connects projects and MOCs to one of eight Pullein areas."@en ;
+    rdfs:domain [ owl:unionOf ( llm-wiki-colab:Project llm-wiki-colab:MOC ) ] ;
+    rdfs:range llm-wiki-colab:Area .
+
+# --- Intellectual Structure ---
+
+llm-wiki-colab:concept a rdf:Property ;
+    rdfs:label "concept"@en ;
+    skos:definition "Concept discussed or realized by this note. Links literature and implementations to the concepts they address."@en ;
+    rdfs:domain [ owl:unionOf ( llm-wiki-colab:LiteratureNote llm-wiki-colab:BookNote llm-wiki-colab:ImplementationNote llm-wiki-colab:ExternalResource ) ] ;
+    rdfs:range [ owl:unionOf ( llm-wiki-colab:ConceptNote llm-wiki-colab:TheoryNote llm-wiki-colab:MethodNote ) ] ;
+    owl:inverseOf llm-wiki-colab:conceptOf .
+
+llm-wiki-colab:conceptOf a rdf:Property ;
+    rdfs:label "concept of"@en ;
+    skos:definition "Inverse of concept. Materialized: if A concept B, then B conceptOf A."@en ;
+    owl:inverseOf llm-wiki-colab:concept ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:source a rdf:Property ;
+    rdfs:label "source"@en ;
+    skos:definition "Literature source cited by this note."@en ;
+    rdfs:range [ owl:unionOf ( llm-wiki-colab:LiteratureNote llm-wiki-colab:BookNote ) ] .
+
+llm-wiki-colab:extends a rdf:Property ;
+    rdfs:label "extends"@en ;
+    skos:definition "Builds upon another concept or theory. Indicates intellectual lineage."@en ;
+    rdfs:domain [ owl:unionOf ( llm-wiki-colab:TheoryNote llm-wiki-colab:ConceptNote llm-wiki-colab:MethodNote ) ] ;
+    rdfs:range [ owl:unionOf ( llm-wiki-colab:TheoryNote llm-wiki-colab:ConceptNote llm-wiki-colab:MethodNote ) ] .
+
+llm-wiki-colab:supports a rdf:Property ;
+    rdfs:label "supports"@en ;
+    skos:definition "Validates or provides evidence for the target claim."@en ;
+    owl:inverseOf llm-wiki-colab:supportedBy .
+
+llm-wiki-colab:supportedBy a rdf:Property ;
+    rdfs:label "supported by"@en ;
+    skos:definition "Inverse of supports. Materialized: if A supports B, then B supportedBy A."@en ;
+    owl:inverseOf llm-wiki-colab:supports ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:criticizes a rdf:Property ;
+    rdfs:label "criticizes"@en ;
+    skos:definition "Challenges or opposes the target claim."@en ;
+    owl:inverseOf llm-wiki-colab:criticizedBy .
+
+llm-wiki-colab:criticizedBy a rdf:Property ;
+    rdfs:label "criticized by"@en ;
+    skos:definition "Inverse of criticizes. Materialized: if A criticizes B, then B criticizedBy A."@en ;
+    owl:inverseOf llm-wiki-colab:criticizes ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:implementation a rdf:Property ;
+    rdfs:label "implementation"@en ;
+    skos:definition "Code or system implementing this concept or theory."@en ;
+    rdfs:domain [ owl:unionOf ( llm-wiki-colab:ConceptNote llm-wiki-colab:TheoryNote llm-wiki-colab:MethodNote ) ] ;
+    rdfs:range llm-wiki-colab:ImplementationNote .
+
+llm-wiki-colab:related a rdf:Property ;
+    rdfs:label "related"@en ;
+    skos:definition "Lateral connection between notes. Prefer specific edge fields (extends, supports, criticizes, concept) when a more precise relationship applies."@en ;
+    skos:editorialNote "Symmetric by convention. Catch-all — use sparingly."@en .
+
+# --- Entity Relationships ---
+
+llm-wiki-colab:author a rdf:Property ;
+    rdfs:label "author"@en ;
+    skos:definition "Person who authored this work. Creates a typed edge from literature/book/external-resource to the author's Person or AuthorNote."@en ;
+    rdfs:domain [ owl:unionOf ( llm-wiki-colab:LiteratureNote llm-wiki-colab:BookNote llm-wiki-colab:ExternalResource ) ] ;
+    rdfs:range llm-wiki-colab:Person ;
+    owl:inverseOf llm-wiki-colab:authorOf .
+
+llm-wiki-colab:authorOf a rdf:Property ;
+    rdfs:label "author of"@en ;
+    skos:definition "Inverse of author. Materialized: if A has author B, then B authorOf A."@en ;
+    owl:inverseOf llm-wiki-colab:author ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:affiliation a rdf:Property ;
+    rdfs:label "affiliation"@en ;
+    skos:definition "Organization a person is affiliated with."@en ;
+    rdfs:domain llm-wiki-colab:Person ;
+    rdfs:range llm-wiki-colab:Organization .
+
+llm-wiki-colab:collaborator a rdf:Property ;
+    rdfs:label "collaborator"@en ;
+    skos:definition "Person collaborating on this project."@en ;
+    rdfs:domain llm-wiki-colab:Project ;
+    rdfs:range llm-wiki-colab:Person .
+
+# =============================================================================
+# Annotation Properties (non-edge)
+#
+# Properties that appear in frontmatter but don't create typed relationships
+# between notes. Used for metadata.
+# =============================================================================
+
+llm-wiki-colab:tag a rdf:Property ;
+    rdfs:label "tag"@en ;
+    skos:definition "Frontmatter tag value. Tags are flat strings, not typed relationships."@en .
+
+llm-wiki-colab:status a rdf:Property ;
+    rdfs:label "status"@en ;
+    skos:definition "Lifecycle status of a note (e.g., active, draft, archived)."@en .
+
+llm-wiki-colab:timeline a rdf:Property ;
+    rdfs:label "timeline"@en ;
+    skos:definition "Expected timeline for a project."@en .
+
+# =============================================================================
+# Materialized Properties
+#
+# Properties computed by build-graph.sh materialization rules.
+# Not asserted in frontmatter. Declared here for agent comprehension.
+# =============================================================================
+
+llm-wiki-colab:isHub a rdf:Property ;
+    rdfs:label "is hub"@en ;
+    skos:definition "Boolean flag materialized on notes with 10 or more inbound relationship edges. Indicates a navigation hub or key concept."@en ;
+    rdfs:range xsd:boolean ;
+    skos:editorialNote "Materialized by build-graph.sh hub detection rule."@en .
+
+# =============================================================================
+# llm-wiki Pattern Edge Additions
+#
+# Forward predicates are author-facing (used in frontmatter or in inline
+# Pandoc-style {rel="..."} annotations). Inverse predicates are materialized
+# by build-graph.sh CONSTRUCT queries, not asserted in source documents.
+# Candidate for upstream contribution to agentic-vault if generally useful.
+# =============================================================================
+
+llm-wiki-colab:partOf a rdf:Property ;
+    rdfs:label "part of"@en ;
+    skos:definition "This page is a structural component or stage of the target page (a larger composite). E.g. Procedural-Memory partOf Three-Stage-Methodology."@en ;
+    owl:inverseOf llm-wiki-colab:hasPart .
+
+llm-wiki-colab:hasPart a rdf:Property ;
+    rdfs:label "has part"@en ;
+    skos:definition "Inverse of partOf. Materialized: if A partOf B, then B hasPart A."@en ;
+    owl:inverseOf llm-wiki-colab:partOf ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:dependsOn a rdf:Property ;
+    rdfs:label "depends on"@en ;
+    skos:definition "This page's design or claim depends on the target page being in place (architectural, logical, or argumentative dependency). Distinct from extends (intellectual lineage)."@en ;
+    owl:inverseOf llm-wiki-colab:prerequisiteOf .
+
+llm-wiki-colab:prerequisiteOf a rdf:Property ;
+    rdfs:label "prerequisite of"@en ;
+    skos:definition "Inverse of dependsOn. Materialized: if A dependsOn B, then B prerequisiteOf A."@en ;
+    owl:inverseOf llm-wiki-colab:dependsOn ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:defines a rdf:Property ;
+    rdfs:label "defines"@en ;
+    skos:definition "This page is the canonical definition source for the target. Distinct from concept (which is 'discusses' or 'is about')."@en ;
+    owl:inverseOf llm-wiki-colab:definedBy .
+
+llm-wiki-colab:definedBy a rdf:Property ;
+    rdfs:label "defined by"@en ;
+    skos:definition "Inverse of defines. Materialized: if A defines B, then B definedBy A."@en ;
+    owl:inverseOf llm-wiki-colab:defines ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:resolvedBy a rdf:Property ;
+    rdfs:label "resolved by"@en ;
+    skos:definition "An open question, gap, or concern raised by this page is answered or addressed by the target page."@en ;
+    owl:inverseOf llm-wiki-colab:resolves .
+
+llm-wiki-colab:resolves a rdf:Property ;
+    rdfs:label "resolves"@en ;
+    skos:definition "Inverse of resolvedBy. Materialized: if A resolvedBy B, then B resolves A."@en ;
+    owl:inverseOf llm-wiki-colab:resolvedBy ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:incorporatedInto a rdf:Property ;
+    rdfs:label "incorporated into"@en ;
+    skos:definition "Content from this page (a passage, a recommendation, a methodology section) appears in or has been adopted by the target page. The staging-document pattern."@en ;
+    owl:inverseOf llm-wiki-colab:incorporates .
+
+llm-wiki-colab:incorporates a rdf:Property ;
+    rdfs:label "incorporates"@en ;
+    skos:definition "Inverse of incorporatedInto. Materialized: if A incorporatedInto B, then B incorporates A."@en ;
+    owl:inverseOf llm-wiki-colab:incorporatedInto ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:precedes a rdf:Property ;
+    rdfs:label "precedes"@en ;
+    skos:definition "This page precedes the target in a sequence (version history, stage progression, phase). E.g. Phase-I-Proposal precedes Phase-II-Proposal; Procedural-Memory precedes Iterative-Ontology-Evolution."@en ;
+    owl:inverseOf llm-wiki-colab:precededBy .
+
+llm-wiki-colab:precededBy a rdf:Property ;
+    rdfs:label "preceded by"@en ;
+    skos:definition "Inverse of precedes. Materialized: if A precedes B, then B precededBy A."@en ;
+    owl:inverseOf llm-wiki-colab:precedes ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:feedsInto a rdf:Property ;
+    rdfs:label "feeds into"@en ;
+    skos:definition "Content, signals, or data from this page flow into the target (data pipeline / system component relationship). Distinct from supports (evidence for a claim) and dependsOn (architectural prerequisite)."@en ;
+    owl:inverseOf llm-wiki-colab:informedBy .
+
+llm-wiki-colab:informedBy a rdf:Property ;
+    rdfs:label "informed by"@en ;
+    skos:definition "Inverse of feedsInto. Materialized: if A feedsInto B, then B informedBy A."@en ;
+    owl:inverseOf llm-wiki-colab:feedsInto ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .
+
+llm-wiki-colab:outOfScopeFor a rdf:Property ;
+    rdfs:label "out of scope for"@en ;
+    skos:definition "This page's content is explicitly NOT to appear in the target page. Useful for keeping speculative or exploratory material cleanly separated from formal deliverables (proposals, specifications)."@en ;
+    owl:inverseOf llm-wiki-colab:excludes .
+
+llm-wiki-colab:excludes a rdf:Property ;
+    rdfs:label "excludes"@en ;
+    skos:definition "Inverse of outOfScopeFor. Materialized: if A outOfScopeFor B, then B excludes A."@en ;
+    owl:inverseOf llm-wiki-colab:outOfScopeFor ;
+    skos:editorialNote "Materialized by build-graph.sh. Not asserted in frontmatter."@en .

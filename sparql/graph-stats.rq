@@ -1,0 +1,11 @@
+# Overall graph statistics: total triples, total typed notes, total edges.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT
+    (COUNT(*) AS ?totalTriples)
+    (COUNT(DISTINCT ?note) AS ?typedNotes)
+WHERE {
+    { ?s ?p ?o }
+    UNION
+    { ?note a ?type }
+}

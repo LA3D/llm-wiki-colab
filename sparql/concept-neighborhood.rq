@@ -1,0 +1,23 @@
+# Find all notes connected to a concept by title substring. Returns note title, type, and relation. Used by Retrieve targeted mode. Replace CONCEPT_SUBSTRING.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?noteTitle ?noteType ?relation WHERE {
+    ?concept dcterms:title ?conceptTitle .
+    FILTER(CONTAINS(LCASE(?conceptTitle), LCASE("CONCEPT_SUBSTRING")))
+    {
+        ?note llm-wiki-colab:concept ?concept .
+        BIND("references" AS ?relation)
+    } UNION {
+        ?note llm-wiki-colab:supports ?concept .
+        BIND("supports" AS ?relation)
+    } UNION {
+        ?note llm-wiki-colab:criticizes ?concept .
+        BIND("criticizes" AS ?relation)
+    } UNION {
+        ?note llm-wiki-colab:extends ?concept .
+        BIND("extends" AS ?relation)
+    }
+    ?note a ?noteType .
+    ?note dcterms:title ?noteTitle .
+    FILTER EXISTS { ?note a ?t }
+} ORDER BY ?relation ?noteTitle

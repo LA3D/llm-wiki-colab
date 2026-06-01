@@ -1,0 +1,366 @@
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema:  <https://schema.org/> .
+@prefix llm-wiki-colab:   <https://la3d.github.io/llm-wiki-colab/ontology#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix vq:      <https://example.com/vault/queries/> .
+
+# =============================================================================
+# Vault Query Catalog — Self-describing SPARQL queries (SIB/UniProt pattern)
+#
+# Each query is a sh:SPARQLExecutable with:
+#   - rdfs:comment   — what it does (human + agent readable)
+#   - schema:keywords — discovery tags
+#   - sh:select       — the SPARQL query text
+#   - sh:prefixes     — shared prefix declarations
+#
+# This file IS the documentation. Claude Code reads it to discover available
+# queries and their purposes, then extracts sh:select to run via arq.
+#
+# Usage:
+#   arq --data=llm-wiki-graph.ttl --query=<(sparql extracted from sh:select)
+#
+# Pattern follows: https://github.com/sib-swiss/sparql-examples
+# =============================================================================
+
+# --- Shared prefixes ---
+
+_:vault_query_prefixes a sh:PrefixDeclaration ;
+    sh:declare
+        [ sh:prefix "vault"   ; sh:namespace "https://la3d.github.io/llm-wiki-colab/ontology#" ] ,
+        [ sh:prefix "dcterms" ; sh:namespace "http://purl.org/dc/terms/" ] ,
+        [ sh:prefix "rdf"     ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#" ] ,
+        [ sh:prefix "rdfs"    ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#" ] ,
+        [ sh:prefix "xsd"     ; sh:namespace "http://www.w3.org/2001/XMLSchema#" ] .
+
+# =============================================================================
+# A. Navigation — Hierarchy and Structure
+# =============================================================================
+
+vq:notes-by-type a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Count notes grouped by type. Overview of vault composition." ;
+    schema:keywords "overview", "types", "stats" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+SELECT ?type (COUNT(?note) AS ?count) WHERE {
+    ?note a ?type .
+} GROUP BY ?type ORDER BY DESC(?count)""" .
+
+vq:notes-by-area a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "List all notes under a given area of focus. Replace AREA_SUBSTRING with the area name fragment (e.g. 'Research')." ;
+    schema:keywords "area", "focus", "Pullein", "navigation" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?type ?title WHERE {
+    ?note llm-wiki-colab:area ?area .
+    ?note a ?type .
+    ?note dcterms:title ?title .
+    FILTER(CONTAINS(STR(?area), "AREA_SUBSTRING"))
+} ORDER BY ?type ?title""" .
+
+vq:children-of a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "List all notes whose llm-wiki-colab:up points to a given parent. Replace PARENT_SLUG with the URI slug (e.g. 'Agentic-Memory-Systems-MOC')." ;
+    schema:keywords "children", "hierarchy", "down", "MOC" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?type ?title WHERE {
+    ?note llm-wiki-colab:up <https://la3d.github.io/llm-wiki-colab/page/PARENT_SLUG> .
+    ?note a ?type .
+    ?note dcterms:title ?title .
+} ORDER BY ?type ?title""" .
+
+vq:ancestors-of a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Walk up the hierarchy from a note to all ancestors. Replace NOTE_SLUG with the URI slug." ;
+    schema:keywords "ancestors", "hierarchy", "up", "path" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?ancestor ?ancestorTitle WHERE {
+    <https://la3d.github.io/llm-wiki-colab/page/NOTE_SLUG> llm-wiki-colab:up+ ?ancestor .
+    ?ancestor dcterms:title ?ancestorTitle .
+}""" .
+
+# =============================================================================
+# B. Discovery — Finding notes by content
+# =============================================================================
+
+vq:search-by-title a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find notes whose title contains a substring. Replace SEARCH_TERM. Returns the note, its type, and all edges." ;
+    schema:keywords "search", "title", "find", "lookup" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?title ?type ?pred ?targetTitle WHERE {
+    ?note dcterms:title ?title .
+    FILTER(CONTAINS(LCASE(?title), LCASE("SEARCH_TERM")))
+    ?note a ?type .
+    OPTIONAL {
+        ?note ?pred ?target .
+        ?target dcterms:title ?targetTitle .
+        FILTER(?pred NOT IN (dcterms:title))
+    }
+} ORDER BY ?title ?pred""" .
+
+vq:notes-by-tag a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find notes with a specific tag. Replace TAG_VALUE." ;
+    schema:keywords "tag", "filter", "category" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?title ?type WHERE {
+    ?note llm-wiki-colab:tag "TAG_VALUE" .
+    ?note dcterms:title ?title .
+    ?note a ?type .
+} ORDER BY ?title""" .
+
+# =============================================================================
+# C. Research — Concept chains and literature
+# =============================================================================
+
+vq:concept-chain a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Multi-hop: find literature → concept → implementation chains. Discovers how papers connect to code via concepts." ;
+    schema:keywords "concept", "literature", "implementation", "chain", "multi-hop" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?paper ?paperTitle ?concept ?conceptTitle ?impl ?implTitle WHERE {
+    ?paper llm-wiki-colab:concept ?concept .
+    ?paper dcterms:title ?paperTitle .
+    ?concept dcterms:title ?conceptTitle .
+    OPTIONAL {
+        ?concept llm-wiki-colab:implementation ?impl .
+        ?impl dcterms:title ?implTitle .
+    }
+} ORDER BY ?conceptTitle""" .
+
+vq:supports-criticizes a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Map the intellectual argument structure: which notes support or criticize which concepts." ;
+    schema:keywords "supports", "criticizes", "argument", "evidence", "intellectual" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?source ?sourceTitle ?relation ?target ?targetTitle WHERE {
+    VALUES ?relation { llm-wiki-colab:supports llm-wiki-colab:criticizes }
+    ?source ?relation ?target .
+    ?source dcterms:title ?sourceTitle .
+    ?target dcterms:title ?targetTitle .
+} ORDER BY ?targetTitle ?relation""" .
+
+vq:extension-chains a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find intellectual lineage: theory notes that extend other theories." ;
+    schema:keywords "extends", "lineage", "theory", "builds-on" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?noteTitle ?extends ?extendsTitle WHERE {
+    ?note llm-wiki-colab:extends ?extends .
+    ?note dcterms:title ?noteTitle .
+    ?extends dcterms:title ?extendsTitle .
+} ORDER BY ?noteTitle""" .
+
+vq:literature-for-concept a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find all literature notes that reference a concept. Replace CONCEPT_SUBSTRING." ;
+    schema:keywords "literature", "concept", "papers", "sources" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?paper ?paperTitle ?relation WHERE {
+    ?paper ?relation ?concept .
+    ?concept dcterms:title ?conceptTitle .
+    FILTER(CONTAINS(LCASE(?conceptTitle), LCASE("CONCEPT_SUBSTRING")))
+    ?paper dcterms:title ?paperTitle .
+    FILTER(?relation IN (llm-wiki-colab:concept, llm-wiki-colab:supports, llm-wiki-colab:criticizes, llm-wiki-colab:source))
+} ORDER BY ?relation ?paperTitle""" .
+
+# =============================================================================
+# D. Quality — Orphans, dangling refs, structural health
+# =============================================================================
+
+vq:orphan-notes a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find typed notes with no incoming relationship edges (orphans). These may need linking or archival." ;
+    schema:keywords "orphan", "disconnected", "health", "quality" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?note ?type ?title WHERE {
+    ?note a ?type .
+    ?note dcterms:title ?title .
+    FILTER NOT EXISTS {
+        ?other ?pred ?note .
+        FILTER(?pred NOT IN (
+            rdf:type, dcterms:title, dcterms:created,
+            llm-wiki-colab:tag, llm-wiki-colab:status, llm-wiki-colab:timeline
+        ))
+    }
+} ORDER BY ?type ?title""" .
+
+vq:hub-notes a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find the most-connected notes (highest inbound edge count). Navigation hubs and key concepts." ;
+    schema:keywords "hub", "connected", "central", "important" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?title (COUNT(?src) AS ?inbound) WHERE {
+    ?src ?pred ?note .
+    ?note dcterms:title ?title .
+    FILTER(?pred NOT IN (
+        rdf:type, dcterms:title, dcterms:created,
+        llm-wiki-colab:tag, llm-wiki-colab:status, llm-wiki-colab:timeline
+    ))
+    FILTER(isIRI(?note))
+} GROUP BY ?title ORDER BY DESC(?inbound) LIMIT 25""" .
+
+vq:projects-missing-area a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find projects without an area of focus (Pullein compliance check)." ;
+    schema:keywords "project", "area", "compliance", "Pullein", "quality" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?title WHERE {
+    ?note a llm-wiki-colab:Project .
+    ?note dcterms:title ?title .
+    FILTER NOT EXISTS { ?note llm-wiki-colab:area ?area . }
+} ORDER BY ?title""" .
+
+vq:graph-stats a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Overall graph statistics: total triples, total typed notes, total edges." ;
+    schema:keywords "stats", "overview", "size", "health" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT
+    (COUNT(*) AS ?totalTriples)
+    (COUNT(DISTINCT ?note) AS ?typedNotes)
+WHERE {
+    { ?s ?p ?o }
+    UNION
+    { ?note a ?type }
+}""" .
+
+# =============================================================================
+# E. Retrieve — Structured retrieval queries for Phase 1c
+# =============================================================================
+
+vq:concept-neighborhood a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find all notes connected to a concept by title substring. Returns note title, type, and relation. Used by Retrieve targeted mode. Replace CONCEPT_SUBSTRING." ;
+    schema:keywords "concept", "neighborhood", "retrieve", "targeted" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?note ?noteTitle ?noteType ?relation WHERE {
+    ?concept dcterms:title ?conceptTitle .
+    FILTER(CONTAINS(LCASE(?conceptTitle), LCASE("CONCEPT_SUBSTRING")))
+    {
+        ?note llm-wiki-colab:concept ?concept .
+        BIND("references" AS ?relation)
+    } UNION {
+        ?note llm-wiki-colab:supports ?concept .
+        BIND("supports" AS ?relation)
+    } UNION {
+        ?note llm-wiki-colab:criticizes ?concept .
+        BIND("criticizes" AS ?relation)
+    } UNION {
+        ?note llm-wiki-colab:extends ?concept .
+        BIND("extends" AS ?relation)
+    }
+    ?note a ?noteType .
+    ?note dcterms:title ?noteTitle .
+    FILTER EXISTS { ?note a ?t }
+} ORDER BY ?relation ?noteTitle""" .
+
+vq:note-neighborhood a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Full 2-hop neighborhood of a note: outgoing edges (1-hop), inverse incoming (1-hop), shared-concept siblings (2-hop). Replace NOTE_URI with full URI. Used by Retrieve contextual mode." ;
+    schema:keywords "neighborhood", "2-hop", "retrieve", "contextual", "connections" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT DISTINCT ?neighbor ?neighborTitle ?neighborType ?path ?hopCount WHERE {
+    {
+        <NOTE_URI> ?outPred ?neighbor .
+        FILTER(?outPred IN (llm-wiki-colab:concept, llm-wiki-colab:source, llm-wiki-colab:extends,
+                           llm-wiki-colab:supports, llm-wiki-colab:criticizes, llm-wiki-colab:related,
+                           llm-wiki-colab:implementation))
+        ?neighbor dcterms:title ?neighborTitle .
+        ?neighbor a ?neighborType .
+        BIND(REPLACE(STR(?outPred), ".*#", "") AS ?path)
+        BIND(1 AS ?hopCount)
+    } UNION {
+        ?neighbor ?inPred <NOTE_URI> .
+        FILTER(?inPred IN (llm-wiki-colab:concept, llm-wiki-colab:supports, llm-wiki-colab:criticizes,
+                           llm-wiki-colab:extends, llm-wiki-colab:related, llm-wiki-colab:up))
+        ?neighbor dcterms:title ?neighborTitle .
+        ?neighbor a ?neighborType .
+        BIND(CONCAT("inverse-", REPLACE(STR(?inPred), ".*#", "")) AS ?path)
+        BIND(1 AS ?hopCount)
+    } UNION {
+        <NOTE_URI> llm-wiki-colab:concept ?sharedConcept .
+        ?neighbor llm-wiki-colab:concept ?sharedConcept .
+        FILTER(?neighbor != <NOTE_URI>)
+        ?neighbor dcterms:title ?neighborTitle .
+        ?neighbor a ?neighborType .
+        BIND("shared-concept" AS ?path)
+        BIND(2 AS ?hopCount)
+    }
+    FILTER EXISTS { ?neighbor a ?anyType }
+} ORDER BY ?hopCount ?path ?neighborTitle
+LIMIT 30""" .
+
+vq:cold-neighbors a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "2-hop neighbors with low inbound edge count (< 5), excluding hubs. Surfaces underexplored notes in a concept's neighborhood. Replace NOTE_URI. Used by Retrieve exploratory mode." ;
+    schema:keywords "cold", "underexplored", "retrieve", "exploratory", "discovery" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?neighbor ?neighborTitle ?neighborType ?inbound ?path WHERE {
+    {
+        <NOTE_URI> llm-wiki-colab:concept ?concept .
+        ?neighbor llm-wiki-colab:concept ?concept .
+        FILTER(?neighbor != <NOTE_URI>)
+        BIND("shared-concept" AS ?path)
+    } UNION {
+        <NOTE_URI> llm-wiki-colab:up ?moc .
+        ?neighbor llm-wiki-colab:up ?moc .
+        FILTER(?neighbor != <NOTE_URI>)
+        BIND("sibling-under-moc" AS ?path)
+    }
+    ?neighbor dcterms:title ?neighborTitle .
+    ?neighbor a ?neighborType .
+    FILTER NOT EXISTS { ?neighbor llm-wiki-colab:isHub true }
+    FILTER EXISTS { ?neighbor a ?anyType }
+    {
+        SELECT ?neighbor (COUNT(?src) AS ?inbound) WHERE {
+            ?src ?pred ?neighbor .
+            FILTER(?pred NOT IN (
+                rdf:type, dcterms:title, dcterms:created,
+                llm-wiki-colab:tag, llm-wiki-colab:status, llm-wiki-colab:timeline
+            ))
+        } GROUP BY ?neighbor
+    }
+    FILTER(?inbound < 5)
+} ORDER BY ?inbound ?neighborTitle
+LIMIT 15""" .
+
+vq:cross-moc-bridges a sh:SPARQLExecutable, sh:SPARQLSelectExecutable ;
+    rdfs:comment "Find notes that bridge two MOCs — notes in a different MOC that reference notes in the anchor's MOC via concept/related/extends/supports edges. Replace NOTE_URI. Used by Retrieve exploratory mode." ;
+    schema:keywords "bridge", "cross-domain", "MOC", "retrieve", "exploratory" ;
+    sh:prefixes _:vault_query_prefixes ;
+    sh:select """PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT DISTINCT ?bridge ?bridgeTitle ?bridgeType ?bridgeMOCTitle WHERE {
+    <NOTE_URI> llm-wiki-colab:up ?anchorMOC .
+    ?bridge llm-wiki-colab:up ?bridgeMOC .
+    FILTER(?bridgeMOC != ?anchorMOC)
+    ?bridge ?pred ?anchorNeighbor .
+    ?anchorNeighbor llm-wiki-colab:up ?anchorMOC .
+    FILTER(?pred IN (llm-wiki-colab:concept, llm-wiki-colab:related, llm-wiki-colab:extends, llm-wiki-colab:supports))
+    ?bridge dcterms:title ?bridgeTitle .
+    ?bridge a ?bridgeType .
+    ?bridgeMOC dcterms:title ?bridgeMOCTitle .
+    FILTER EXISTS { ?bridge a ?anyType }
+} LIMIT 10""" .

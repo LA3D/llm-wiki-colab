@@ -1,0 +1,33 @@
+# Full 2-hop neighborhood of a note: outgoing edges (1-hop), inverse incoming (1-hop), shared-concept siblings (2-hop). Replace NOTE_URI with full URI. Used by Retrieve contextual mode.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT DISTINCT ?neighbor ?neighborTitle ?neighborType ?path ?hopCount WHERE {
+    {
+        <NOTE_URI> ?outPred ?neighbor .
+        FILTER(?outPred IN (llm-wiki-colab:concept, llm-wiki-colab:source, llm-wiki-colab:extends,
+                           llm-wiki-colab:supports, llm-wiki-colab:criticizes, llm-wiki-colab:related,
+                           llm-wiki-colab:implementation))
+        ?neighbor dcterms:title ?neighborTitle .
+        ?neighbor a ?neighborType .
+        BIND(REPLACE(STR(?outPred), ".*#", "") AS ?path)
+        BIND(1 AS ?hopCount)
+    } UNION {
+        ?neighbor ?inPred <NOTE_URI> .
+        FILTER(?inPred IN (llm-wiki-colab:concept, llm-wiki-colab:supports, llm-wiki-colab:criticizes,
+                           llm-wiki-colab:extends, llm-wiki-colab:related, llm-wiki-colab:up))
+        ?neighbor dcterms:title ?neighborTitle .
+        ?neighbor a ?neighborType .
+        BIND(CONCAT("inverse-", REPLACE(STR(?inPred), ".*#", "")) AS ?path)
+        BIND(1 AS ?hopCount)
+    } UNION {
+        <NOTE_URI> llm-wiki-colab:concept ?sharedConcept .
+        ?neighbor llm-wiki-colab:concept ?sharedConcept .
+        FILTER(?neighbor != <NOTE_URI>)
+        ?neighbor dcterms:title ?neighborTitle .
+        ?neighbor a ?neighborType .
+        BIND("shared-concept" AS ?path)
+        BIND(2 AS ?hopCount)
+    }
+    FILTER EXISTS { ?neighbor a ?anyType }
+} ORDER BY ?hopCount ?path ?neighborTitle
+LIMIT 30

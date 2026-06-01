@@ -1,0 +1,5 @@
+# Count notes grouped by type. Overview of vault composition.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+SELECT ?type (COUNT(?note) AS ?count) WHERE {
+    ?note a ?type .
+} GROUP BY ?type ORDER BY DESC(?count)

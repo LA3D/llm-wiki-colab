@@ -1,0 +1,32 @@
+# 2-hop neighbors with low inbound edge count (< 5), excluding hubs. Surfaces underexplored notes in a concept's neighborhood. Replace NOTE_URI. Used by Retrieve exploratory mode.
+PREFIX llm-wiki-colab: <https://la3d.github.io/llm-wiki-colab/ontology#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?neighbor ?neighborTitle ?neighborType ?inbound ?path WHERE {
+    {
+        <NOTE_URI> llm-wiki-colab:concept ?concept .
+        ?neighbor llm-wiki-colab:concept ?concept .
+        FILTER(?neighbor != <NOTE_URI>)
+        BIND("shared-concept" AS ?path)
+    } UNION {
+        <NOTE_URI> llm-wiki-colab:up ?moc .
+        ?neighbor llm-wiki-colab:up ?moc .
+        FILTER(?neighbor != <NOTE_URI>)
+        BIND("sibling-under-moc" AS ?path)
+    }
+    ?neighbor dcterms:title ?neighborTitle .
+    ?neighbor a ?neighborType .
+    FILTER NOT EXISTS { ?neighbor llm-wiki-colab:isHub true }
+    FILTER EXISTS { ?neighbor a ?anyType }
+    {
+        SELECT ?neighbor (COUNT(?src) AS ?inbound) WHERE {
+            ?src ?pred ?neighbor .
+            FILTER(?pred NOT IN (
+                rdf:type, dcterms:title, dcterms:created,
+                llm-wiki-colab:tag, llm-wiki-colab:status, llm-wiki-colab:timeline
+            ))
+        } GROUP BY ?neighbor
+    }
+    FILTER(?inbound < 5)
+} ORDER BY ?inbound ?neighborTitle
+LIMIT 15
