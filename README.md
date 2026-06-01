@@ -117,9 +117,25 @@ etc., matching the IRI base structure.
 
 ## Attribution
 
-The KG pipeline is adapted from the working ontology and tooling in Charles
-Vardeman's `agentic-vault`, with additions for the multi-agent / federated
-case (extra typed-edge predicates including `partOf`, `dependsOn`, `defines`,
-`resolvedBy`, `incorporatedInto`, `outOfScopeFor`, `precedes`, `feedsInto`,
-and their inverses; the visible body-link annotation form;
-contribution-status-aware verifier rules).
+The core ontology, JSON-LD context, SHACL shapes, and SPARQL pipeline are
+adapted from the working `agentic-vault` system developed by **Dr. Charles
+Vardeman II** (Research Assistant Professor, Center for Research Computing,
+University of Notre Dame). The base typed-edge vocabulary (`up`, `source`,
+`extends`, `supports`, `criticizes`, `concept`, `related`, plus associated
+classes and SHACL shapes) and the `wiki → JSON-LD → Turtle → materialized
+inverses → SHACL` pipeline shape are all his.
+
+This repo's additions, layered on that base for the multi-agent / federated
+case:
+
+- Typed-edge predicates: `partOf` / `hasPart`, `dependsOn` / `prerequisiteOf`,
+  `defines` / `definedBy`, `resolvedBy` / `resolves`, `incorporatedInto` /
+  `incorporates`, `outOfScopeFor` / `excludes`, `precedes` / `precededBy`,
+  `feedsInto` / `informedBy`.
+- Inline body-link annotation form (Variant 1, visible predicate link to the
+  `Edge-Types` page) so per-mention typed edges can sit next to plain prose
+  links.
+- Contribution-status-aware verifier rules (canonical strict, contribution
+  relaxed) for the federated wiki use case.
+- Namespace and IRI base for the collaborative variant
+  (`llm-wiki-colab:` at `https://la3d.github.io/llm-wiki-colab/`).
