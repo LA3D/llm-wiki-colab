@@ -3,20 +3,20 @@
 # Usage: ./build-graph.sh --wiki=PATH [--stats] [--skip-validate] [--skip-materialize]
 #
 # Outputs (written next to this script):
-#   llm-wiki-colab-graph.jsonld      (intermediate JSON-LD)
-#   llm-wiki-colab-graph.ttl         (base Turtle graph)
-#   llm-wiki-colab-graph-full.ttl    (base + materialized triples)
-#   validation-report.ttl            (SHACL validation report)
+#   graph.jsonld           (intermediate JSON-LD)
+#   graph.ttl              (base Turtle graph)
+#   graph-full.ttl         (base + materialized triples)
+#   validation-report.ttl  (SHACL validation report)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VAULT_ROOT="$(cd "$SCRIPT_DIR" && pwd)"
-JSONLD_OUT="$SCRIPT_DIR/llm-wiki-colab-graph.jsonld"
-TURTLE_OUT="$SCRIPT_DIR/llm-wiki-colab-graph.ttl"
-WEIGHTS_OUT="$SCRIPT_DIR/llm-wiki-colab-graph-weights.ttl"
-FULL_OUT="$SCRIPT_DIR/llm-wiki-colab-graph-full.ttl"
-SHAPES="$SCRIPT_DIR/llm-wiki-colab-shapes.ttl"
+JSONLD_OUT="$SCRIPT_DIR/graph.jsonld"
+TURTLE_OUT="$SCRIPT_DIR/graph.ttl"
+WEIGHTS_OUT="$SCRIPT_DIR/graph-weights.ttl"
+FULL_OUT="$SCRIPT_DIR/graph-full.ttl"
+SHAPES="$SCRIPT_DIR/shapes.ttl"
 REPORT_OUT="$SCRIPT_DIR/validation-report.ttl"
 
 STATS_FLAG=""

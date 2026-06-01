@@ -95,20 +95,25 @@ Build the KG from a wiki:
 Run a canned SPARQL query against the built graph:
 
 ```bash
-arq --data=llm-wiki-colab-graph-full.ttl --query=sparql/hub-notes.rq
+arq --data=graph-full.ttl --query=sparql/hub-notes.rq
 ```
 
 ## Layout
 
 ```
-llm-wiki-colab-ontology.ttl     OWL/SKOS ontology (classes + predicates)
-llm-wiki-colab-context.jsonld   JSON-LD context (prefix + edge term mappings)
-llm-wiki-colab-shapes.ttl       SHACL shapes (frontmatter validation)
-llm-wiki-colab-queries.ttl      Example queries in Turtle form (reference)
-build-graph.sh                  End-to-end pipeline
-wiki-to-jsonld.py               Frontmatter + body-link extractor
-sparql/                         18 canned SPARQL queries (.rq)
+ontology.ttl       OWL/SKOS ontology (classes + predicates)
+context.jsonld     JSON-LD context (prefix + edge term mappings)
+shapes.ttl         SHACL shapes (frontmatter validation)
+queries.ttl        Example queries in Turtle form (reference)
+build-graph.sh     End-to-end pipeline
+wiki-to-jsonld.py  Frontmatter + body-link extractor
+sparql/            18 canned SPARQL queries (.rq)
 ```
+
+File names are unqualified (no `llm-wiki-colab-` prefix) because the
+repo itself carries the namespace: when these files are dereferenced via
+GitHub Pages they land at `https://la3d.github.io/llm-wiki-colab/ontology.ttl`
+etc., matching the IRI base structure.
 
 ## Attribution
 

@@ -30,8 +30,8 @@ from pathlib import Path
 # --- Configuration ---
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-CONTEXT_FILE = SCRIPT_DIR / "llm-wiki-colab-context.jsonld"
-ONTOLOGY_FILE = SCRIPT_DIR / "llm-wiki-colab-ontology.ttl"
+CONTEXT_FILE = SCRIPT_DIR / "context.jsonld"
+ONTOLOGY_FILE = SCRIPT_DIR / "ontology.ttl"
 OUTPUT_FILE = None  # stdout by default
 
 # Directories to skip entirely
