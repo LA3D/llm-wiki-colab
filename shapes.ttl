@@ -23,7 +23,7 @@
 
 vs:Prefixes a sh:PrefixDeclaration ;
     sh:declare
-        [ sh:prefix "llm-wiki" ; sh:namespace "https://la3d.github.io/llm-wiki-colab/ontology#"^^xsd:anyURI ] ,
+        [ sh:prefix "llm-wiki-colab" ; sh:namespace "https://la3d.github.io/llm-wiki-colab/ontology#"^^xsd:anyURI ] ,
         [ sh:prefix "dcterms" ; sh:namespace "http://purl.org/dc/terms/"^^xsd:anyURI ] ,
         [ sh:prefix "rdf"     ; sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ] ,
         [ sh:prefix "rdfs"    ; sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ] ,
